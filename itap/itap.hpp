@@ -311,37 +311,12 @@ class iTAP {
         return Sps;
       }
     }
-};
-}
+  private: // yhc
+    void _raise_error_acaf2() {
+      // remvoe incremental
+      printf("ACA Final 2: Should not be here\n");
+      exit(1);      
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}; // class iTAP 
+} // namespace itap

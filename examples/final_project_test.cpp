@@ -10,21 +10,25 @@ int main(int argc, char *argv[]) {
 
   std::string filename = argv[1]; 
   int matrix_size = std::atoi(argv[2]);
-
+  
+  // Get object
   itap::iTAP partitioner(filename);
 
+  // Set partition size
   partitioner.set_partition_size(partitioner.num_nodes());
-
   std::cout << "task graph size = " << partitioner.num_nodes() << "\n";
+  
+  // Do partition
   std::cout << "runnning gpu partitioning...\n";
   partitioner.partition();
 
+  // Check the validation of the partition result
   if(partitioner.is_partition_valid() == false) {
     std::cerr << "cycle introduced...\n";
     std::exit(EXIT_FAILURE);
   }
 
-  // dump the partitioned graph
+  // Dump the partitioned graph
   // std::cout << "dumped graph, node_name[partition], check it on GraphvizOnline.\n";
   // partitioner.dump_graph();
   
