@@ -27,5 +27,7 @@ int main(int argc, char *argv[]) {
   // dump the partitioned graph
   // std::cout << "dumped graph, node_name[partition], check it on GraphvizOnline.\n";
   // partitioner.dump_graph();
+  
+  // run_graph: show the runtime of simulation of taskflow and itap
   partitioner.run_graph(matrix_size);
 }
