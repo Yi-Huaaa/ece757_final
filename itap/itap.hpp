@@ -186,7 +186,48 @@ class iTAP {
 
     // partition
     void set_partition_size(const size_t partition_size);
-    void partition(bool incremental = false, bool only_handle_edge = false);
+    
+
+    // yhc: we set a heuristic partition here
+    void ACA2_partition(const int matrix_size, size_t partition_size) {
+      // bool use_itap = (matrix_size <= 32);
+      // if (matrix_size < 8) {
+      //   // partition_size = 64;
+      //   partition_size = num_nodes();
+      // } else if(matrix_size < 32) {
+      //   partition_size = 32;
+      // } else if(matrix_size < 64) {
+      //   partition_size = 8;
+      // } else {
+      //   partition_size = 1;
+      // }
+
+      if (partition_size > 4096) {
+        // if too small, update the 
+        partition_size = num_nodes();
+      }
+      
+      // Set partition size
+      set_partition_size(partition_size);
+      std::cout << "task graph size = " << partition_size << "\n";
+      
+      // if (use_itap) {
+        // Do partition
+        printf("Runnning gpu partitioning...\n");
+        partition(false, false, matrix_size);
+        // Check validation
+        check_cycle(); 
+      // } 
+      // else {
+      //   printf("Skip G-PASTA partitioning due to large matrix size (= %d)\n", matrix_size);
+      // }
+    }
+
+    // yhc
+
+    void partition(bool incremental = false, 
+                  bool only_handle_edge = false, 
+                  const int matrix_size = 8);
     void reset_partition();
     void build_cluster_graph();
 
@@ -311,7 +352,15 @@ class iTAP {
         return Sps;
       }
     }
-  private: // yhc
+
+    void check_cycle() {
+      if(is_partition_valid() == false) {
+        std::cerr << "cycle introduced...\n";
+        std::exit(EXIT_FAILURE);
+      }      
+    }
+
+  private:
     void _raise_error_acaf2() {
       // remvoe incremental
       printf("ACA Final 2: Should not be here\n");

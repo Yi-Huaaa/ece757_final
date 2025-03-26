@@ -136,3 +136,23 @@ partition_size = partition_time_budget / task_compute_time
 2. 數據統計：taskflow 在什麼狀況比較好、G-PASTA 在什麼狀況比較好
 3. 根據這個統計去跑一次 graph （先跑到這裡就好）
 
+---
+
+# 20250326
+## TODO: 加上 heuristic 去幫助判斷最好的 `partition_size`
+* 用途：heuristic 找出最好的 `partition_size`
+* 原因：因為我們發現在比較大的 `matrix_size` 的狀況下，itap 若仍設 `partition_size == num_nodes()` 效能會變不好，因此我們希望多一步 preprocess 讓 partitioned taskflow graph 可以跑得更快。
+* 結論：我們要外面接個  heuristic 演算法幫助尋找最佳的 `partitioned_size`: 例如使用： (1) Simulated annealing (SA) and (2) simulated quantum annealing (SQA)
+  * 跟 ACA2 的關係：這是一個 GPU 的應用、並且會使用到 Tensor cores
+
+## 額外補充：Why SA is needed? But a mapping is easier and better?
+* 相同的 matrix_size，即使固定同一個 partition size，每次跑出來的 runtime 都有小幅波動（noise）。
+* 舉例來說，我們固定 `matrix_size = 16`，每次跑出來組快的 `partition_size` 是誰都不一定，因此不能用「單一固定表」來選最好的 `partition_size`。
+* 也證明了 Simulated Annealing（SA）是必要的，因為它能在 noisy cost function 下找到「大致好的」選擇。
+
+
+
+
+
+
+

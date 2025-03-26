@@ -181,14 +181,13 @@ void iTAP::set_partition_size(const size_t partition_size) {
 }
 
 
-/**
-@brief: perform partition
-incremental = true, perform incremental partition, else, perform full partition
-The default value for "incremental" is set to false to perform full partition
-*/
-void iTAP::partition(bool incremental, bool only_handle_edge) {
+void iTAP::partition(bool incremental, bool only_handle_edge, const int matrix_size) {
   // yhc: remove the incremental code
-  printf("bibi\n");
+  assert(incremental == false && "incremental == false");
+  assert(only_handle_edge == false && "only_handle_edge == false");
+  
+  printf("bibi, matrix_size = %d\n", matrix_size);
+  
   // reset the whole partition
   for(auto& n : _nodes) {
     n._cluster_id = -1;
@@ -253,10 +252,10 @@ void iTAP::build_cluster_graph() {
     std::exit(EXIT_FAILURE);
   }
   size_t num_clusters = _max_cluster_id + 1;
+  // printf("num_clusters = %lu\n", num_clusters);
 
   // use a 2-D vector to record clusters (cuz it supports constant time random access)
   std::vector<std::vector<Node*>> clusters(num_clusters);
-  // std::cout << "_num_clusters: " << _num_clusters << "\n";
   for(auto& n : _nodes) {
     int cluster = n._cluster_id;
     // std::cout << "name: " << n._name << " cluster: " << cluster << "\n";
@@ -788,6 +787,152 @@ void iTAP::_export_csr() {
   //   std::cout << n << "   ";
   // }
   // std::cout << "]\n";
+}
+
+/**
+@brief: randomly remove N nodes and edges, and insert the same amount of node and edges 
+*/
+void iTAP::random_incre_ops(size_t N) {
+
+  if(2*N >= _nodes.size()) {
+    std::cerr << "2*N exceeds the total number of nodes.\n";
+    std::exit(EXIT_FAILURE);
+  }
+  
+  std::random_device rd;
+  std::mt19937 gen(rd());
+
+  // get N random numbers
+  std::vector<size_t> random_nodes = generate_random_nums(_nodes.size(), N);
+  std::vector<size_t> random_edges = generate_random_nums(_edges.size(), N);
+  std::sort(random_nodes.begin(), random_nodes.end());
+  std::sort(random_edges.begin(), random_edges.end());
+
+  // remove N nodes randomly
+  auto node_it = _nodes.begin();
+  size_t currentIndex = 0;
+  auto index_it = random_nodes.begin();
+  while (node_it != _nodes.end() && index_it != random_nodes.end()) {
+      if (currentIndex == *index_it) {
+          // When the current index matches, erase the element
+          remove_node(&(*(node_it++))); // first remove the element, then increment node_it
+          ++index_it; // Move to the next index
+      } else {
+          ++node_it; // Move to the next element in the list
+      }
+      ++currentIndex; // Increment the current index in the list
+  }
+
+  // remove N edges randomly
+  auto edge_it = _edges.begin();
+  currentIndex = 0;
+  index_it = random_edges.begin();
+  while (edge_it != _edges.end() && index_it != random_edges.end()) {
+      if (currentIndex == *index_it) {
+          // When the current index matches, erase the element
+          remove_edge(&(*(edge_it++))); // first remove the element, then increment edge_it
+          ++index_it; // Move to the next index
+      } else {
+          ++edge_it; // Move to the next element in the list
+      }
+      ++currentIndex; // Increment the current index in the list
+  }
+
+  // add N random edges within the existing nodes
+  // this insertion needs to follow topological order
+  std::vector<Node*> topo; 
+  std::queue<Node*> to_visit;
+  for(auto& node : _nodes) {
+    node._dep_cnt_random = 0;
+  }
+  for(auto& node : _nodes) {
+    if(node._fanins.size() == 0) {
+      to_visit.push(&node);
+    }
+  }
+  while(!to_visit.empty()) {
+    Node* cur_node = to_visit.front();
+    to_visit.pop();
+    topo.push_back(cur_node);
+    for(auto& edge : cur_node->_fanouts) {
+      Node* successor = edge->_to; 
+      if(++successor->_dep_cnt_random == successor->_fanins.size()) {
+        to_visit.push(successor);
+      }
+    }
+  }
+  if(N >= topo.size()) {
+    std::cerr << "N exceeds topo.size()...\n";
+    std::exit(EXIT_FAILURE);
+  }
+  // each time select 2 random indices from topo and connect them
+  for(size_t i=0; i<N; i++) {
+    std::uniform_int_distribution<> dis(i+1, topo.size() - 1); 
+    size_t randomIndex = dis(gen);
+    // use name to find if there is already an edge between them
+    bool has_edge = false;
+    for(auto& edge : topo[i]->_fanouts) {
+      if(edge->_to->_name == topo[randomIndex]->_name) {
+        has_edge = true;
+      } 
+    }
+    if(!has_edge) {
+      insert_edge(topo[i], topo[randomIndex]);
+    }
+  }
+  
+  // add N nodes 
+  std::vector<Node*> nodes(N);
+  for(size_t i=0; i<N; i++) {
+    nodes[i] = insert_node("new_"+std::to_string(i)); 
+  }
+
+  // add N edges randomly by connectint the new nodes 
+  // to the existing nodes as dependents/successors  
+  std::vector<size_t> random_nodes1 = generate_random_nums(_nodes.size(), N);
+  std::sort(random_nodes1.begin(), random_nodes1.end());
+  auto it = random_nodes1.begin();
+  size_t listIndex = 0;
+  size_t new_node_index = 0;
+  for (auto& element : _nodes) {
+    if (it != random_nodes1.end() && listIndex == *it) {
+      if(*it>=_nodes.size()-N && *it-(_nodes.size()-N) == new_node_index) {
+        // to prevent the new node connected to itself
+        // so some of the new nodes will not connect to anyone
+        continue;
+      }
+      std::uniform_int_distribution<> dis(0, _nodes.size() - 1 - N); 
+      size_t randomIndex = dis(gen);  
+      if(randomIndex % 2 == 0) {
+        insert_edge(&element, nodes[new_node_index]);
+      }
+      else {
+        insert_edge(nodes[new_node_index], &element);
+      }
+      ++new_node_index;
+      ++it; // Move to the next index
+    }
+    ++listIndex; // Increment the current index in the list
+  }
+
+}
+
+std::vector<size_t> iTAP::generate_random_nums(int N, int count) {
+
+    if(N <= count) {
+      std::cerr << "too many random incremental ops...\n";
+      std::exit(EXIT_FAILURE);
+    }
+
+    std::vector<size_t> numbers(N);
+    std::iota(numbers.begin(), numbers.end(), 0); // Fill with 0, 1, ..., N-1
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::shuffle(numbers.begin(), numbers.end(), gen);
+
+    numbers.resize(count); // Keep only the first 'count' numbers
+    return numbers;
 }
 
 
