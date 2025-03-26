@@ -935,5 +935,50 @@ std::vector<size_t> iTAP::generate_random_nums(int N, int count) {
     return numbers;
 }
 
+// yhc
+
+
+int itap::_SA() {
+  assert(_matrix_size >= 8 && "_matrix_size size too small, shouldn't use simulated annealing."); 
+
+  // (8, 16) = 2048, (32, 64) = 128: has different number of candidates 
+  std::vector<int> candidates; 
+  candidates.resize((_matrix_size < 32) ? (2048) : (128)); 
+
+  TODO: random init is not good, maybe we can start from half (?)
+  TODO: set rand seed as const for better debugging 
+  int cur = candidates[rand() % candidates.size()]; 
+  int best = cur;
+  float T = 100.0;
+
+  auto get_cost = [&](int p) {
+    auto& samples = runtime_data.at(p);
+    int sum = 0;
+    for(auto x : samples) sum += x;
+    return sum / samples.size();  // 平均值
+  };
+
+  for(int iter = 0; iter < 1000; ++iter) {
+    // 找相鄰 partition size（例如 log2 距離為1）
+    int i = std::find(candidates.begin(), candidates.end(), cur) - candidates.begin();
+    std::vector<int> neighbors;
+    if(i > 0) neighbors.push_back(candidates[i - 1]);
+    if(i < candidates.size() - 1) neighbors.push_back(candidates[i + 1]);
+
+    int next = neighbors[rand() % neighbors.size()];
+    int delta = get_cost(next) - get_cost(cur);
+
+    if(delta < 0 || (rand() % 10000) < 10000 * exp(-delta / T)) {
+      cur = next;
+      if(get_cost(cur) < get_cost(best)) best = cur;
+    }
+
+    T *= 0.995;
+  }
+
+  return best;
+}
+
+// yhc
 
 } // namespace itap

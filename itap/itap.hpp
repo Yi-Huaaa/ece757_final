@@ -12,6 +12,8 @@
 #include <chrono> // For std::chrono::system_clock
 #include "wsq.hpp"
 #include "taskflow/taskflow.hpp"
+#include "runtime_data.hpp"
+
 
 namespace itap {
 
@@ -188,8 +190,11 @@ class iTAP {
     void set_partition_size(const size_t partition_size);
     
 
-    // yhc: we set a heuristic partition here
+    // yhc: 
+    // we set a heuristic partition here
+    int _matrix_size;
     void ACA2_partition(const int matrix_size, size_t partition_size) {
+      _matrix_size = matrix_size; 
       // bool use_itap = (matrix_size <= 32);
       // if (matrix_size < 8) {
       //   // partition_size = 64;
@@ -222,6 +227,8 @@ class iTAP {
       //   printf("Skip G-PASTA partitioning due to large matrix size (= %d)\n", matrix_size);
       // }
     }
+
+    void _SA();
 
     // yhc
 
