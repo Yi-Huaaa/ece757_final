@@ -151,6 +151,9 @@ partition_size = partition_time_budget / task_compute_time
 * 也證明了 Simulated Annealing（SA）是必要的，因為它能在 noisy cost function 下找到「大致好的」選擇。
 
 
+# 20250327
+* 寫完 `_SA();`，確定 runtime 可以因為 `_SA();` 而加速。
+* 目前在寫 Final Project Status Report。
 
 
 

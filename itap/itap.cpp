@@ -192,7 +192,7 @@ void iTAP::partition(bool incremental, bool only_handle_edge, const int matrix_s
   assert(incremental == false && "incremental == false");
   assert(only_handle_edge == false && "only_handle_edge == false");
   
-  printf("bibi, matrix_size = %d\n", matrix_size);
+  // printf("bibi, matrix_size = %d\n", matrix_size);
   
   // reset the whole partition
   for(auto& n : _nodes) {
@@ -955,7 +955,7 @@ int iTAP::get_cost(const std::vector<int>& runtime, int partition_size) {
 }
 
 
-#define ACA2_DEBUG
+// #define ACA2_DEBUG
 size_t iTAP::_SA(const int matrix_size, size_t partition_size) {
 #ifdef ACA2_DEBUG
   srand(42); // Set rand seed as const for better debugging 
