@@ -191,45 +191,22 @@ class iTAP {
     
 
     // yhc: 
-    // we set a heuristic partition here
-    int _matrix_size;
+    int get_cost(const std::vector<int>& runtime, int partition_size);
+    size_t _SA(const int matrix_size, size_t partition_size);
     void ACA2_partition(const int matrix_size, size_t partition_size) {
-      _matrix_size = matrix_size; 
-      // bool use_itap = (matrix_size <= 32);
-      // if (matrix_size < 8) {
-      //   // partition_size = 64;
-      //   partition_size = num_nodes();
-      // } else if(matrix_size < 32) {
-      //   partition_size = 32;
-      // } else if(matrix_size < 64) {
-      //   partition_size = 8;
-      // } else {
-      //   partition_size = 1;
-      // }
+      // We set a heuristic SA to get a better partition size 
+      partition_size = _SA(matrix_size, partition_size);
 
-      if (partition_size > 4096) {
-        // if too small, update the 
-        partition_size = num_nodes();
-      }
-      
       // Set partition size
       set_partition_size(partition_size);
-      std::cout << "task graph size = " << partition_size << "\n";
+      std::cout << "SA pick partition_size = " << partition_size << "\n";
       
-      // if (use_itap) {
-        // Do partition
-        printf("Runnning gpu partitioning...\n");
-        partition(false, false, matrix_size);
-        // Check validation
-        check_cycle(); 
-      // } 
-      // else {
-      //   printf("Skip G-PASTA partitioning due to large matrix size (= %d)\n", matrix_size);
-      // }
+      // Do partition
+      printf("Runnning gpu partitioning...\n");
+      partition(false, false, matrix_size);
+      // Check validation
+      check_cycle(); 
     }
-
-    void _SA();
-
     // yhc
 
     void partition(bool incremental = false, 

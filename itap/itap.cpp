@@ -1,4 +1,10 @@
 #include "itap.hpp"
+#include <cstdlib> 
+#include <ctime>
+#include <cmath> 
+#include <vector>
+#include <algorithm>
+#include <unordered_map>
 
 namespace itap{
 
@@ -937,47 +943,85 @@ std::vector<size_t> iTAP::generate_random_nums(int N, int count) {
 
 // yhc
 
+int iTAP::get_cost(const std::vector<int>& runtime, int partition_size) {
+  int idx = partition_size - 1;
+  int base = idx * 4;
 
-int itap::_SA() {
-  assert(_matrix_size >= 8 && "_matrix_size size too small, shouldn't use simulated annealing."); 
+  int sum = 0;
+  for (int i = 0; i < 4; ++i) {
+    sum += runtime[base + i];
+  }
+  return sum / 4;
+}
 
-  // (8, 16) = 2048, (32, 64) = 128: has different number of candidates 
-  std::vector<int> candidates; 
-  candidates.resize((_matrix_size < 32) ? (2048) : (128)); 
 
-  TODO: random init is not good, maybe we can start from half (?)
-  TODO: set rand seed as const for better debugging 
-  int cur = candidates[rand() % candidates.size()]; 
+#define ACA2_DEBUG
+size_t iTAP::_SA(const int matrix_size, size_t partition_size) {
+#ifdef ACA2_DEBUG
+  srand(42); // Set rand seed as const for better debugging 
+#else // pure random
+  srand(time(NULL));
+#endif
+
+  // Edge cases then return 
+  if (partition_size > 4096 || matrix_size < 8) {
+    return num_nodes();
+  }
+
+  // int a = matrix8_rt[0];
+  // printf("a = %d\n", a);
+  // return partition_size;
+
+  // Init candidates
+  int max_partition = (matrix_size < 32) ? 2048 : 128;
+  std::vector<int> candidates;
+  for (int p = 1; p <= max_partition; ++p) { // Note: 1-based here
+    candidates.push_back(p);
+  }
+
+  // Runtime data source
+  const std::vector<int>* runtime = nullptr;
+  if (matrix_size == 8) runtime = &matrix8_rt;
+  else if (matrix_size == 16) runtime = &matrix16_rt;
+  else if (matrix_size == 32) runtime = &matrix32_rt;
+  else if (matrix_size == 64) runtime = &matrix64_rt;
+  else return num_nodes(); // Unsupported matrix size fallback, act needs to assert here
+
+  // Sanity check
+  if (runtime->size() != (candidates.size()<<2)) {
+    std::cerr << "[SA] Runtime size mismatch: got " << runtime->size()
+              << ", expected " << candidates.size() * 4 << std::endl;
+    return num_nodes();
+  }
+
+  // SA init
+  int cur = candidates[rand() % candidates.size()];
   int best = cur;
   float T = 100.0;
 
-  auto get_cost = [&](int p) {
-    auto& samples = runtime_data.at(p);
-    int sum = 0;
-    for(auto x : samples) sum += x;
-    return sum / samples.size();  // 平均值
-  };
+  // SA
+  for (int iter = 0; iter < 1000; ++iter) {
+    // Find the position of cur in the candidate vector 
+    int pos = cur - 1; 
 
-  for(int iter = 0; iter < 1000; ++iter) {
-    // 找相鄰 partition size（例如 log2 距離為1）
-    int i = std::find(candidates.begin(), candidates.end(), cur) - candidates.begin();
-    std::vector<int> neighbors;
-    if(i > 0) neighbors.push_back(candidates[i - 1]);
-    if(i < candidates.size() - 1) neighbors.push_back(candidates[i + 1]);
-
-    int next = neighbors[rand() % neighbors.size()];
-    int delta = get_cost(next) - get_cost(cur);
-
-    if(delta < 0 || (rand() % 10000) < 10000 * exp(-delta / T)) {
+    // Find left and right neighbors for 3 and 3 as new neighbor candidate
+    const int neighbors_starts = ((pos-3) < 0) ? (0) : (pos-3);
+    const int neighbors_ends = ((pos+3) >= candidates.size()) ? (candidates.size()) : (pos+3);
+    int next_pos = neighbors_starts + rand() % (neighbors_ends - neighbors_starts + 1);
+    int next = candidates[next_pos];
+    
+    int delta = get_cost(*runtime, next) - get_cost(*runtime, cur);
+    if (delta < 0 || (rand() % 10000) < 10000 * exp(-delta / T)) {
       cur = next;
-      if(get_cost(cur) < get_cost(best)) best = cur;
+      if (get_cost(*runtime, cur) < get_cost(*runtime, best)) {
+        best = cur;
+      }
     }
-
     T *= 0.995;
   }
-
   return best;
 }
+
 
 // yhc
 
