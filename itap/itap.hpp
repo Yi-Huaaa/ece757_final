@@ -194,22 +194,26 @@ class iTAP {
     int get_cost(const std::vector<int>& runtime, int partition_size);
     size_t _SA(const int matrix_size, size_t partition_size);
     void ACA2_partition(const int matrix_size, size_t partition_size, const int version) {
-      // const std::vector<int> ML_predict_part_sz = {299, 65, 14, 6};
-      // if (version == 0) {
-      //   // G-PASTA
-      //   partition_size = num_nodes();
-      // } else if (version == 1) { // SA: 
-      //   // We set a heuristic SA to get a better partition size 
-      //   partition_size = _SA(matrix_size, partition_size);
-      // } else {
-      //   // ML predictior
-      //   if (matrix_size < 8) {
-      //     partition_size = num_nodes();
-      //   } else {
-      //     const int label = std::log2(matrix_size) - 3;
-      //     partition_size = ML_predict_part_sz[label];
-      //   }
-      // }
+      if (version == 0) {
+        printf("Version: G-PASTA\n");
+        partition_size = num_nodes();
+      } else if (version == 1) { // SA: 
+        printf("Version: Simlated Annealing\n");
+        partition_size = _SA(matrix_size, partition_size);
+      } else if (version == 2) {
+        printf("Version: ML (XGBoost)\n");
+        const std::vector<int> ML_predict_part_sz = {299, 65, 14, 6};
+        if (matrix_size < 8) {
+          partition_size = num_nodes();
+        } else {
+          const int label = std::log2(matrix_size) - 3;
+          partition_size = ML_predict_part_sz[label];
+        }
+      } else {
+        printf("No such strategy\n");
+        exit(1);
+      }
+      
 
       // Set partition size
       set_partition_size(partition_size);

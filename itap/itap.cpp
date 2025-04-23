@@ -963,17 +963,13 @@ size_t iTAP::_SA(const int matrix_size, size_t partition_size) {
   srand(time(NULL));
 #endif
 
-  // Edge cases then return 
-  if (partition_size > 4096 || matrix_size < 8) {
-    return num_nodes();
-  }
-
-  // int a = matrix8_rt[0];
-  // printf("a = %d\n", a);
-  // return partition_size;
+  // // Edge cases then return 
+  // if (partition_size > 4096 || matrix_size < 8) {
+  //   return num_nodes();
+  // }
 
   // Init candidates
-  int max_partition = (matrix_size < 32) ? 2048 : 128;
+  const int max_partition = (matrix_size < 8) ? 4096 : 1024;
   std::vector<int> candidates;
   for (int p = 1; p <= max_partition; ++p) { // Note: 1-based here
     candidates.push_back(p);
@@ -981,7 +977,10 @@ size_t iTAP::_SA(const int matrix_size, size_t partition_size) {
 
   // Runtime data source
   const std::vector<int>* runtime = nullptr;
-  if (matrix_size == 8) runtime = &matrix8_rt;
+  if (matrix_size == 1) runtime = &matrix1_rt;
+  else if (matrix_size == 2) runtime = &matrix2_rt;
+  else if (matrix_size == 4) runtime = &matrix4_rt;
+  else if (matrix_size == 8) runtime = &matrix8_rt;
   else if (matrix_size == 16) runtime = &matrix16_rt;
   else if (matrix_size == 32) runtime = &matrix32_rt;
   else if (matrix_size == 64) runtime = &matrix64_rt;
@@ -997,10 +996,10 @@ size_t iTAP::_SA(const int matrix_size, size_t partition_size) {
   // SA init
   int cur = candidates[rand() % candidates.size()];
   int best = cur;
-  float T = 100.0;
+  float T = 100.0; // T: tunable_var_0
 
   // SA
-  for (int iter = 0; iter < 1000; ++iter) {
+  for (int iter = 0; iter < 1000; ++iter) {  // iter: tunable_var_1
     // Find the position of cur in the candidate vector 
     int pos = cur - 1; 
 
@@ -1017,7 +1016,7 @@ size_t iTAP::_SA(const int matrix_size, size_t partition_size) {
         best = cur;
       }
     }
-    T *= 0.995;
+    T *= 0.995;  // 0.995: tunable_var_2
   }
   return best;
 }

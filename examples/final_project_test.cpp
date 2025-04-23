@@ -1,6 +1,6 @@
 #include "itap.hpp"
 
-#define VERSION 0 // 0: G-PASTA, 1: _SA, 2: ML
+#define VERSION 1 // 0: G-PASTA, 1: _SA, 2: ML
 
 int main(int argc, char *argv[]) {
 
