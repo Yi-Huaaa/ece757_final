@@ -193,13 +193,27 @@ class iTAP {
     // yhc: 
     int get_cost(const std::vector<int>& runtime, int partition_size);
     size_t _SA(const int matrix_size, size_t partition_size);
-    void ACA2_partition(const int matrix_size, size_t partition_size) {
-      // We set a heuristic SA to get a better partition size 
-      partition_size = _SA(matrix_size, partition_size);
+    void ACA2_partition(const int matrix_size, size_t partition_size, const int version) {
+      // const std::vector<int> ML_predict_part_sz = {299, 65, 14, 6};
+      // if (version == 0) {
+      //   // G-PASTA
+      //   partition_size = num_nodes();
+      // } else if (version == 1) { // SA: 
+      //   // We set a heuristic SA to get a better partition size 
+      //   partition_size = _SA(matrix_size, partition_size);
+      // } else {
+      //   // ML predictior
+      //   if (matrix_size < 8) {
+      //     partition_size = num_nodes();
+      //   } else {
+      //     const int label = std::log2(matrix_size) - 3;
+      //     partition_size = ML_predict_part_sz[label];
+      //   }
+      // }
 
       // Set partition size
       set_partition_size(partition_size);
-      std::cout << "SA pick partition_size = " << partition_size << "\n";
+      std::cout << "Picked partition_size = " << partition_size << "\n";
       
       // Do partition
       printf("Runnning gpu partitioning...\n");

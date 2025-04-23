@@ -1,5 +1,7 @@
 #include "itap.hpp"
 
+#define VERSION 0 // 0: G-PASTA, 1: _SA, 2: ML
+
 int main(int argc, char *argv[]) {
 
   if(argc != 4) {
@@ -16,7 +18,7 @@ int main(int argc, char *argv[]) {
   // Get object
   itap::iTAP partitioner(filename);
 
-  partitioner.ACA2_partition(matrix_size, partition_size);
+  partitioner.ACA2_partition(matrix_size, partition_size, VERSION);
 
   // Dump the partitioned graph
   // std::cout << "dumped graph, node_name[partition], check it on GraphvizOnline.\n";
