@@ -1,6 +1,10 @@
 #include "itap.hpp"
 
 #define VERSION 1 // 0: G-PASTA, 1: _SA, 2: ML
+#define ITERATION 1000
+#define INIT_T 100
+#define T_DECREASE 0.9995//0.995
+
 
 int main(int argc, char *argv[]) {
 
@@ -18,7 +22,7 @@ int main(int argc, char *argv[]) {
   // Get object
   itap::iTAP partitioner(filename);
 
-  partitioner.ACA2_partition(matrix_size, partition_size, VERSION);
+  partitioner.ACA2_partition(matrix_size, partition_size, VERSION, ITERATION, INIT_T, T_DECREASE);
 
   // Dump the partitioned graph
   // std::cout << "dumped graph, node_name[partition], check it on GraphvizOnline.\n";
@@ -26,4 +30,6 @@ int main(int argc, char *argv[]) {
   
   // run_graph: show the runtime of simulation of taskflow and itap
   partitioner.run_graph(matrix_size);
+
+
 }

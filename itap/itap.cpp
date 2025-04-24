@@ -956,7 +956,8 @@ int iTAP::get_cost(const std::vector<int>& runtime, int partition_size) {
 
 
 // #define ACA2_DEBUG
-size_t iTAP::_SA(const int matrix_size, size_t partition_size) {
+size_t iTAP::_SA(const int matrix_size, size_t partition_size,
+                 const int ITERATION, const float INIT_T, const float T_DECREASE) {
 #ifdef ACA2_DEBUG
   srand(42); // Set rand seed as const for better debugging 
 #else // pure random
@@ -996,10 +997,10 @@ size_t iTAP::_SA(const int matrix_size, size_t partition_size) {
   // SA init
   int cur = candidates[rand() % candidates.size()];
   int best = cur;
-  float T = 100.0; // T: tunable_var_0
+  float T = INIT_T; // T: tunable_var_0
 
   // SA
-  for (int iter = 0; iter < 1000; ++iter) {  // iter: tunable_var_1
+  for (int iter = 0; iter < ITERATION; ++iter) {  // iter: tunable_var_1
     // Find the position of cur in the candidate vector 
     int pos = cur - 1; 
 
@@ -1016,7 +1017,7 @@ size_t iTAP::_SA(const int matrix_size, size_t partition_size) {
         best = cur;
       }
     }
-    T *= 0.995;  // 0.995: tunable_var_2
+    T *= T_DECREASE;  // 0.995: tunable_var_2
   }
   return best;
 }

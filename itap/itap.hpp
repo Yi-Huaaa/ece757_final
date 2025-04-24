@@ -192,14 +192,16 @@ class iTAP {
 
     // yhc: 
     int get_cost(const std::vector<int>& runtime, int partition_size);
-    size_t _SA(const int matrix_size, size_t partition_size);
-    void ACA2_partition(const int matrix_size, size_t partition_size, const int version) {
+    size_t _SA(const int matrix_size, size_t partition_size, 
+              const int ITERATION, const float INIT_T, const float T_DECREASE);
+    void ACA2_partition(const int matrix_size, size_t partition_size, const int version,
+                        const int ITERATION, const float INIT_T, const float T_DECREASE) {
       if (version == 0) {
         printf("Version: G-PASTA\n");
         partition_size = num_nodes();
       } else if (version == 1) { // SA: 
         printf("Version: Simlated Annealing\n");
-        partition_size = _SA(matrix_size, partition_size);
+        partition_size = _SA(matrix_size, partition_size, ITERATION, INIT_T, T_DECREASE);
       } else if (version == 2) {
         printf("Version: ML (XGBoost)\n");
         const std::vector<int> ML_predict_part_sz = {299, 65, 14, 6};
@@ -224,6 +226,7 @@ class iTAP {
       partition(false, false, matrix_size);
       // Check validation
       check_cycle(); 
+
     }
     // yhc
 
